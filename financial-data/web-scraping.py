@@ -8,6 +8,11 @@ import fix_yahoo_finance as yf
 from pandas_datareader import data as pdr
 
 
+# TODO
+# 1. Make adjustments for trading days (e.g. compare Monday data to Friday close
+# 2. Create main function to run scripts
+
+
 def get_stock_data(date):
     """
     Gets information about daily stock market activity and returns a descriptive string
@@ -42,10 +47,10 @@ def get_stock_data(date):
                '%.2f, but closed flat, returning %.2f%% on the day.' % (sp500_high, sp500_low, sp500_return)
     elif sp500_return > 0.0:
         return 'The S&P500 Index traded up today, returning %.2f%%. The index traded between' \
-               '%.2f and %.2f' % (sp500_return, sp500_low, sp500_high)
+               '%.2f and %.2f.' % (sp500_return, sp500_low, sp500_high)
     else:
         return 'The S&P500 Index traded down today, losing %.2f%%. The index traded between' \
-               '%.2f and %.2f' % (sp500_return, sp500_low, sp500_high)
+               '%.2f and %.2f.' % (sp500_return, sp500_low, sp500_high)
 
 
 def get_bond_data(date):
@@ -94,9 +99,9 @@ def get_commodity_data(date):
     g_curr, g_prev = gold.iloc[0][0], gold.iloc[1][0]
 
     if g_curr > g_prev:
-        return 'Gold rose to %.2f from %.2f' % (g_curr, g_prev)
+        return 'Gold rose to %.2f from %.2f.' % (g_curr, g_prev)
 
-    return 'Gold fell to %.2f from %.2f' % (g_curr, g_prev)
+    return 'Gold fell to %.2f from %.2f.' % (g_curr, g_prev)
 
 
 def get_daily_activity(date):
