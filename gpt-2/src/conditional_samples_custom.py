@@ -4,9 +4,10 @@ import fire
 import json
 import os
 import numpy as np
+import sys
 import tensorflow as tf
 
-import model, sample, encoder
+import model, sample, encoder, webscraping
 
 def interact_model(
     raw_text='This is a test',
@@ -36,6 +37,9 @@ def interact_model(
      while 40 means 40 words are considered at each step. 0 (default) is a
      special setting meaning no restrictions. 40 generally is a good value.
     """
+
+    samples = []
+
     if batch_size is None:
         batch_size = 1
     assert nsamples % batch_size == 0
@@ -74,12 +78,32 @@ def interact_model(
             for i in range(batch_size):
                 generated += 1
                 text = enc.decode(out[i])
-                # print("=" * 40 + " SAMPLE " + str(generated) + " " + "=" * 40)
-                # print(text)
-        # print("=" * 80)
+                samples.append(raw_text + text)
 
-    print (text)
+    return samples
+
+def generate_samples(
+        date,
+        nsamples
+):
+    """
+    Generates text samples for a given date
+
+    :param date: str
+        Date string of the form YYYY-MM-DD
+
+    :param nsamples: int
+        Number of text samples to generate
+
+    :return: list
+        List of generated text
+    """
+
+    # get seed statement based on market activity
+    prompt = webscraping.get_daily_activity(date)
+    # return a list of possible summaries
+    return interact_model(raw_text=prompt, nsamples=nsamples)
+
 
 if __name__ == '__main__':
-    fire.Fire(interact_model)
-
+    generate_samples(date=sys.argv[1], nsamples=sys.argv[2])
