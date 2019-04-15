@@ -224,7 +224,7 @@ def generate_samples(
     """
 
     # get seed statement based on market activity
-    prompt = webscraping.get_daily_activity(date)
+    prompt = get_daily_activity(date)
     # return a list of possible summaries
     return interact_model(raw_text=prompt, nsamples=nsamples)
 
