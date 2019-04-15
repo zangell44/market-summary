@@ -9,6 +9,9 @@ import tensorflow as tf
 
 import model, sample, encoder, webscraping
 
+import fix_yahoo_finance as yf
+
+
 def interact_model(
     raw_text='This is a test',
     model_name='117M',
@@ -106,4 +109,5 @@ def generate_samples(
 
 
 if __name__ == '__main__':
+    yf.pdr_override()
     generate_samples(date=sys.argv[1], nsamples=sys.argv[2])
