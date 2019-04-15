@@ -20,10 +20,9 @@ import fix_yahoo_finance as yf
 
 # TODO
 # 1. Make adjustments for trading days (e.g. compare Monday data to Friday close
-# 2. Create main function to run scripts
 
 
-def get_stock_data(date):
+def get_stock_data(date, prev):
     """
     Gets information about daily stock market activity and returns a descriptive string
 
@@ -36,13 +35,12 @@ def get_stock_data(date):
     -------
     summary : str
     """
-    yf.pdr_override()
 
     # everything below is hardcoded to one timestep
 
     # get data from date and prior day
     sp500 = pdr.StooqDailyReader("SPY",
-                                 start=(parser.parse(date) - datetime.timedelta(1)).strftime('%Y-%m-%d'),
+                                 start=prev,
                                  end=date).read()
 
     # get key metrics
@@ -63,7 +61,7 @@ def get_stock_data(date):
                '%.2f and %.2f.' % (sp500_return, sp500_low, sp500_high)
 
 
-def get_bond_data(date):
+def get_bond_data(date, prev):
     """
     Gets information about daily bond market activity and returns a descriptive string
 
@@ -79,7 +77,7 @@ def get_bond_data(date):
 
     # get bond yields for past two days
     bond_yields = pdr.FredReader('DGS10',
-                                 start=(parser.parse(date) - datetime.timedelta(1)).strftime('%Y-%m-%d'),
+                                 start=prev,
                                  end=date).read()
 
     curr, prev = bond_yields.iloc[0][0], bond_yields.iloc[1][0]
@@ -90,7 +88,7 @@ def get_bond_data(date):
     return 'US 10 Year Treasury yields fell to %.2f%% from %.2f%% today.' % (curr, prev)
 
 
-def get_commodity_data(date):
+def get_commodity_data(date, prev):
     """
     Gets information about daily commodity market activity and returns a descriptive string
 
@@ -104,7 +102,7 @@ def get_commodity_data(date):
     summary : str
     """
     gold = pdr.FredReader('GOLDAMGBD228NLBM',
-                          start=(parser.parse(date) - datetime.timedelta(1)).strftime('%Y-%m-%d'),
+                          start=prev,
                           end=date).read()
     g_curr, g_prev = gold.iloc[0][0], gold.iloc[1][0]
 
@@ -128,9 +126,20 @@ def get_daily_activity(date):
     summary : str
         A string describing the day's activity.
     """
-    return ' '.join([get_stock_data(date),
-                     get_bond_data(date),
-                     get_commodity_data(date)])
+    # check for Monday - if so we return difference from Friday to Monday
+    if parser.parse(date).weekday() == 0:
+        delta = 3
+    else:
+        delta = 1
+
+    # get previous trading day
+    prev = (parser.parse(date) - datetime.timedelta(delta)).strftime('%Y-%m-%d')
+
+    print(prev)
+
+    return ' '.join([get_stock_data(date, prev),
+                     get_bond_data(date, prev),
+                     get_commodity_data(date, prev)])
 
 
 ### GPT-2 Model ###
@@ -234,5 +243,5 @@ def generate_samples(
 ### MAIN ###
 
 if __name__ == '__main__':
-    yf.pdr_override()
-    generate_samples(date=sys.argv[1], nsamples=sys.argv[2])
+    summaries = generate_samples(date=sys.argv[1], nsamples=sys.argv[2])
+    print (summaries)
