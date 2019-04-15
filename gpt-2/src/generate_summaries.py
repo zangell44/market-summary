@@ -8,6 +8,8 @@ import numpy as np
 import sys
 import tensorflow as tf
 
+import model, sample, encoder, webscraping
+
 import datetime
 from dateutil import parser
 from pandas_datareader import data as pdr
@@ -226,7 +228,7 @@ def generate_samples(
     # get seed statement based on market activity
     prompt = get_daily_activity(date)
     # return a list of possible summaries
-    return interact_model(raw_text=prompt, nsamples=nsamples)
+    return interact_model(raw_text=prompt, nsamples=int(nsamples))
 
 
 ### MAIN ###
