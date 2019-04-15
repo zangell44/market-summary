@@ -39,16 +39,16 @@ def get_stock_data(date):
     # everything below is hardcoded to one timestep
 
     # get data from date and prior day
-    sp500 = pdr.get_data_yahoo("^GSPC",
-                               start=(parser.parse(date) - datetime.timedelta(1)).strftime('%Y-%m-%d'),
-                               end=date)
+    sp500 = pdr.StooqDailyReader("SPY",
+                                 start=(parser.parse(date) - datetime.timedelta(1)).strftime('%Y-%m-%d'),
+                                 end=date).read()
 
     # get key metrics
     sp500_return = (sp500.iloc[1].Close -
                     sp500.iloc[0].Close) / sp500.iloc[0].Close
 
-    sp500_high = sp500.iloc[1].High
-    sp500_low = sp500.iloc[1].Low
+    sp500_high = sp500.iloc[1].High * 10
+    sp500_low = sp500.iloc[1].Low * 10
 
     if abs(sp500_return - 0.0) < 0.3:
         return 'The S&P500 Index traded up as high as %.2f, and as low as ' \
