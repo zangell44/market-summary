@@ -4,8 +4,12 @@ TODO: Docstring
 
 import datetime
 from dateutil import parser
-import fix_yahoo_finance as yf
 from pandas_datareader import data as pdr
+import fix_yahoo_finance as yf
+
+
+yf.pdr_override()
+
 
 # TODO
 # 1. Make adjustments for trading days (e.g. compare Monday data to Friday close
