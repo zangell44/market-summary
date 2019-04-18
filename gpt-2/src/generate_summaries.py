@@ -5,6 +5,7 @@ TODO: Docstring
 import json
 import os
 import numpy as np
+import re
 import sys
 import tensorflow as tf
 
@@ -13,13 +14,18 @@ import model, sample, encoder, webscraping
 import datetime
 from dateutil import parser
 from pandas_datareader import data as pdr
-import fix_yahoo_finance as yf
+import pymysql
+
+
+# database connection params
+HOST = os.environ.get("HOST")
+PORT = int(os.environ.get("PORT"))
+DBNAME = os.environ.get("DBNAME")
+USER = os.environ.get("USER")
+PASSWORD = os.environ.get("PASSWORD")
 
 
 ### Web Scraping ###
-
-# TODO
-# 1. Make adjustments for trading days (e.g. compare Monday data to Friday close
 
 
 def get_stock_data(date, prev):
@@ -135,11 +141,12 @@ def get_daily_activity(date):
     # get previous trading day
     prev = (parser.parse(date) - datetime.timedelta(delta)).strftime('%Y-%m-%d')
 
-    print(prev)
+    lead_in = 'Market action in the United States was driven primarily by'
 
     return ' '.join([get_stock_data(date, prev),
                      get_bond_data(date, prev),
-                     get_commodity_data(date, prev)])
+                     get_commodity_data(date, prev),
+                     lead_in])
 
 
 ### GPT-2 Model ###
@@ -150,9 +157,9 @@ def interact_model(
     seed=None,
     nsamples=1,
     batch_size=1,
-    length=300,
-    temperature=1,
-    top_k=0,
+    length=400,
+    temperature=1.05,
+    top_k=40,
 ):
     """
     Run the model
@@ -213,7 +220,18 @@ def interact_model(
             for i in range(batch_size):
                 generated += 1
                 text = enc.decode(out[i])
-                samples.append(raw_text + text)
+
+                # filter out bad samples
+                regex = re.compile('.+?(?=\<\|endoftext\|\>)')
+                match = regex.findall(raw_text + text)
+                if match:
+                    # check if match length is greater than 1000 chars
+                    if len(match[0]) > 1000:
+                        # append to list
+                        samples.append(raw_text + match[0])
+                else:
+                    # append to output list
+                    samples.append(raw_text + text)
 
     return samples
 
@@ -243,5 +261,26 @@ def generate_samples(
 ### MAIN ###
 
 if __name__ == '__main__':
+    # generate market summaries
     summaries = generate_samples(date=sys.argv[1], nsamples=sys.argv[2])
-    print (summaries)
+    # print (summaries)
+
+    # initialize sql connection
+    conn = pymysql.connect(HOST, user=USER, port=PORT,
+                           passwd=PASSWORD, db=DBNAME)
+    curs = conn.cursor()
+
+    # remove data for given date
+    
+
+    # populate data
+    insert_query = "INSERT INTO Summary (Date, Commentary) VALUES (%s, %s)"
+    # provide a list of tuples to insert
+    values = [(sys.argv[1], summary_text) for summary_text in summaries]
+    curs.executemany(insert_query, values)
+
+    # close cursor and commit
+    conn.commit()
+    curs.close()
+    conn.close()
+    print ('Summaries for date %s inserted succesfully!' % (sys.argv[1]))

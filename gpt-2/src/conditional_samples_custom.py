@@ -4,13 +4,9 @@ import fire
 import json
 import os
 import numpy as np
-import sys
 import tensorflow as tf
 
-import model, sample, encoder, webscraping
-
-import fix_yahoo_finance as yf
-
+import model, sample, encoder
 
 def interact_model(
     raw_text='This is a test',
@@ -85,29 +81,6 @@ def interact_model(
 
     return samples
 
-def generate_samples(
-        date,
-        nsamples
-):
-    """
-    Generates text samples for a given date
-
-    :param date: str
-        Date string of the form YYYY-MM-DD
-
-    :param nsamples: int
-        Number of text samples to generate
-
-    :return: list
-        List of generated text
-    """
-
-    # get seed statement based on market activity
-    prompt = webscraping.get_daily_activity(date)
-    # return a list of possible summaries
-    return interact_model(raw_text=prompt, nsamples=nsamples)
-
 
 if __name__ == '__main__':
-    yf.pdr_override()
-    generate_samples(date=sys.argv[1], nsamples=sys.argv[2])
+    fire.Fire(interact_model())
